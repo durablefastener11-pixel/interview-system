@@ -18,7 +18,7 @@ module.exports = route(async (req, res, s) => {
   const have = await titles(s);
   const want = [
     { title: RESULTS, data: [RESULT_HEADER] },
-    ...Object.entries(defaults).map(([pos, qs]) => ({ title: PREFIX + pos, data: toLayout(qs) })),
+    ...(req.query.seed ? Object.entries(defaults) : []).map(([pos, qs]) => ({ title: PREFIX + pos, data: toLayout(qs) })),
   ].filter((t) => !have.includes(t.title));
   if (!want.length) return res.json({ created: [], note: 'Everything already exists.' });
 

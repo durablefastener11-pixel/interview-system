@@ -11,17 +11,20 @@ Position-wise interview portal. Google Form responses are the candidates, each p
 ## Google Sheet layout
 | Tab | Purpose |
 |---|---|
-| `Form Responses 1` | Google Form responses (needs a Name column and a Position column) |
-| `Q_Accountant`, `Q_Sales`, `Q_Tele Sales`, ... | One tab per position, laid out like the interview sheet (see below) |
-| `Interviews` | Results are saved here automatically |
+| Form data tab (`form details` or `Form Responses 1`) | Google Form answers. Needs a name column and a position column (found automatically from the headers). |
+| One tab **named exactly like each position** (`Accountant`, `HR Manager`, `Tele-Sales Executive`, ...) | The questions for that position, in your interview-sheet layout. |
+| `Interviews` | Results. Created automatically on the first save. |
 
-A candidate whose Position is "Accountant" gets the questions from tab `Q_Accountant`. Add a new position by adding a new `Q_<Position>` tab and the same name to the form dropdown.
+**Candidates.** Read straight from the form data tab, so the TRANSPOSE/FILTER formulas in position tabs are optional. A form answer with several positions ("Data Research Assistant, Graphics Designer") makes the candidate appear under each one, and each is interviewed separately.
 
-## Question tab layout
-Column A = QID, column B = question, optional column C = max score (default 5).
-- A row with `QID` in column A is a **section header**; column B is its title, e.g. `Question - (A) Initial Screening`.
-- A row starting with `▶` in column A is a **stage header**, e.g. `▶ STAGE 3A - INDIAMART TRAPS`.
-- Every other row with text in column B is a question. Rows like "Total Dimension Score" and "Score %" are ignored.
+**Questions.** In the position tab the portal finds the first row with `QID` in one of the first 3 columns and reads downward:
+- a `QID` row = section header (title is the `Question - (A) ...` cell on that row)
+- a row with a QID like `A-1` / `Q05` / `12` and question text to its right = question (score cells and other numbers are ignored)
+- a `▶ STAGE ...` row, a `B. SECTION NAME` row or a 🧪 row = section header
+- `Total Dimension Score`, `Score %`, `Actually ASK Question Result` rows are ignored
+Everything above the first `QID` row (candidate form data) is ignored.
+
+Optional Vercel variables: `CANDIDATES_TAB` (form tab name), `POSITION_TABS` (comma list of position tab names), `EXCLUDE_TABS` (helper tabs to hide), `NAME_COLUMN` / `POSITION_COLUMN` (exact header text).
 
 ## 1. Google Cloud (service account)
 1. Go to console.cloud.google.com and create a project.
@@ -43,6 +46,6 @@ Upload this folder to a new GitHub repository.
 3. Deploy (or Redeploy after adding variables).
 
 ## 4. First use
-Open the site, enter the password, click **Set up sheet** once. It creates `Interviews` and starter `Q_Accountant`, `Q_Sales`, `Q_Tele Sales`, `Q_Data Entry` tabs. Edit those questions in Google Sheets any time.
+Open the site, enter the password, click **Set up sheet** once. It creates the `Interviews` tab (this also happens automatically on the first save).
 
 Run locally: `npm i -g vercel`, copy `.env.example` to `.env.local`, then `npm install && vercel dev`.

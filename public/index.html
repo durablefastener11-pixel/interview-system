@@ -108,24 +108,21 @@ const decCls=d=>/select/i.test(d)?"ok":/hold|trial|train/i.test(d)?"wa":/reject/
 const tag=d=>`<span class="tag ${decCls(d)}">${esc(d||"-")}</span>`;
 const pctCls=p=>p>=70?"ok":p>=50?"wa":"bad";
 
-let H=[],rows=[],ci={n:1,p:2,t:0,ph:-1},hist=[],cands=[],ivs=[],doneList=[],cur=null,Q=[],S={},tm=null,QC={};
-const posOf=r=>(r[ci.p]||"").trim();
+let H=[],rows=[],rp=[],ci={n:1,p:2,t:0,ph:-1},hist=[],cands=[],ivs=[],doneList=[],cur=null,Q=[],S={},tm=null,QC={};
 const keyOf=(n,p)=>(n||"").trim().toLowerCase()+"|"+(p||"").trim().toLowerCase();
 
 async function load(){
   try{
     msg("Loading from Google Sheets…");
-    const c=await api("candidates");H=c.headers;rows=c.rows;
-    const f=re=>H.findIndex(h=>re.test(h||""));
-    ci.n=f(/name/i)>=0?f(/name/i):1;ci.p=f(/position|post|role|apply|job/i);if(ci.p<0)ci.p=2;
-    ci.t=f(/timestamp|date/i);if(ci.t<0)ci.t=0;ci.ph=f(/phone|mobile|contact|whatsapp/i);
+    const c=await api("candidates");H=c.headers;rows=c.rows;rp=c.positions||[];
+    ci.n=c.cols.name;ci.p=c.cols.pos;ci.t=c.cols.ts;ci.ph=c.cols.phone;
     hist=(await api("interviews")).rows;QC={};
     build();fillPos();fillFilters();renderAll();
     msg(`${rows.length} candidate(s) and ${hist.length} saved interview(s) loaded.`,"ok");
   }catch(e){msg(e.message,"bad");try{const h=await api("health");msg(e.message+" | Tabs found: "+h.tabs.join(", "),"bad")}catch(_){}}
 }
 function build(){
-  cands=rows.map((r,i)=>({i,r,name:(r[ci.n]||"").trim(),pos:posOf(r),ts:pdt(r[ci.t])})).filter(c=>c.name);
+  cands=rows.flatMap((r,i)=>(rp[i]||[]).map(p=>({i,r,name:(r[ci.n]||"").trim(),pos:p,ts:pdt(r[ci.t])}))).filter(c=>c.name&&c.pos);
   ivs=hist.map((h,i)=>({h,i,name:(h[1]||"").trim(),pos:(h[2]||"").trim(),dt:pdt(h[4]||h[0]),pct:parseInt(h[9])||0,total:h[7],max:h[8],dec:h[11]||"",by:h[3]||"",mins:h[6]||"",notes:h[12]||"",raw:h[13]||""}));
   const last={};ivs.forEach(v=>{const k=keyOf(v.name,v.pos);if(!last[k]||(v.dt||0)>(last[k].dt||0))last[k]=v});
   cands.forEach(c=>c.iv=last[keyOf(c.name,c.pos)]||null);
@@ -210,7 +207,7 @@ $("csv").onclick=()=>{
   const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}));a.download="interviews.csv";a.click()};
 
 /* ---------- Interview flow ---------- */
-function fillPos(){const ps=[...new Set(rows.map(posOf).filter(Boolean))].sort();
+function fillPos(){const ps=allPos();
   $("pos").innerHTML='<option value="">Select position</option>'+ps.map(p=>`<option>${esc(p)}</option>`).join("");fillCand()}
 function fillCand(){const p=$("pos").value;
   const l=cands.filter(c=>p&&c.pos===p);
@@ -218,7 +215,7 @@ function fillCand(){const p=$("pos").value;
 async function pick(){
   clearInterval(tm);$("fin").innerHTML="";S={};Q=[];cur=null;
   const i=$("cand").value;if(i===""){$("det").innerHTML="";$("qs").innerHTML="";return}
-  const r=rows[+i];cur={row:r,name:(r[ci.n]||"").trim(),pos:posOf(r),start:null,end:null,done:false};
+  const r=rows[+i];cur={row:r,name:(r[ci.n]||"").trim(),pos:$("pos").value,start:null,end:null,done:false};
   $("det").innerHTML=`<div class="c"><h2>${esc(cur.name)}: form details</h2><div class="kv">${H.map((h,k)=>r[k]?`<div><b>${esc(h)}</b>${esc(r[k])}</div>`:"").join("")}</div></div>`;
   $("qs").innerHTML='<div class="c mu">Loading questions…</div>';
   try{const q=await api("questions?position="+encodeURIComponent(cur.pos));

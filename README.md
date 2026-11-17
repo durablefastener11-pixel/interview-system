@@ -2,6 +2,12 @@
 
 Position-wise interview portal. Google Form responses are the candidates, each position has its own question tab, and finished interviews are saved back to the same Google Sheet.
 
+## Portal pages
+- **Overview:** totals, pending, average score, and a per-position table.
+- **Pending:** candidates from the form who have no saved interview, grouped by application date. Filter by position, date range and name. "Start interview" opens the interview screen for that candidate.
+- **Completed:** every saved interview with filters (position, decision, date range, name) and sorting. Click a row for the full question-wise marks, section totals, notes and form details. Print / Save as PDF and CSV download are included.
+- **Interview:** pick a position and candidate, score the questions, save.
+
 ## Google Sheet layout
 | Tab | Purpose |
 |---|---|

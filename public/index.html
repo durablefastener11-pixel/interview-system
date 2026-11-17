@@ -7,13 +7,13 @@
 @media (prefers-color-scheme:dark){:root{--bg:#101318;--card:#181d24;--tx:#e8eaed;--mu:#98a2b3;--bd:#2a313b;--ac:#7aa2ff;--ok:#4ade80;--wa:#fbbf24;--bad:#f87171}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
-.w{max-width:920px;margin:0 auto;padding:16px}
-h1{font-size:21px;margin:0}h2{font-size:16px;margin:0 0 10px}
+.w{max-width:1000px;margin:0 auto;padding:16px}
+h1{font-size:21px;margin:0}h2{font-size:16px;margin:0 0 10px}h3{font-size:14px;margin:0 0 6px}
 .mu{color:var(--mu);font-size:13px}
 .c{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:14px;margin:12px 0}
 .r{display:grid;grid-template-columns:1fr 1fr;gap:10px}@media(max-width:560px){.r{grid-template-columns:1fr}}
 label{display:block;font-size:12px;color:var(--mu);margin-bottom:3px}
-select,input,textarea,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:8px 10px;width:100%}
+select,input,textarea,button{font:inherit;color:var(--tx);background:var(--card);border:1px solid var(--bd);border-radius:6px;padding:7px 10px;width:100%}
 button{width:auto;cursor:pointer}button.p{background:var(--ac);border-color:var(--ac);color:var(--bg)}button:disabled{opacity:.5;cursor:default}
 :focus-visible{outline:2px solid var(--ac);outline-offset:1px}
 .kv{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}.kv div{font-size:14px;word-break:break-word}.kv b{display:block;font-size:12px;color:var(--mu);font-weight:500}
@@ -26,25 +26,62 @@ button{width:auto;cursor:pointer}button.p{background:var(--ac);border-color:var(
 .ok{color:var(--ok)}.wa{color:var(--wa)}.bad{color:var(--bad)}
 .sticky{position:sticky;top:0;z-index:5}
 #msg{font-size:13px;margin:8px 0}
-table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:6px;border-bottom:1px solid var(--bd)}
+table{width:100%;border-collapse:collapse;font-size:13px}td,th{text-align:left;padding:7px 6px;border-bottom:1px solid var(--bd);vertical-align:top}th{color:var(--mu);font-weight:500;font-size:12px}
 .sx{overflow-x:auto}.hide{display:none}
-</style></head><body><div class="w">
-
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:12px 0}.tabs button{border-radius:99px}.tabs button.on{background:var(--ac);border-color:var(--ac);color:var(--bg)}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}.stat{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:12px}.stat .n{font-size:28px;font-weight:700;line-height:1.1}
+.flt{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.tag{display:inline-block;padding:1px 9px;border-radius:99px;font-size:12px;font-weight:600;border:1px solid currentColor;white-space:nowrap}
+.day{font-weight:600;margin:16px 0 4px;padding:6px 10px;background:var(--bg);border-radius:4px;display:flex;justify-content:space-between}
+.prow{display:flex;gap:10px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:8px 4px;border-bottom:1px solid var(--bd)}
+tr[data-row]{cursor:pointer}tr[data-row]:hover{background:var(--bg)}
+.barw{display:inline-block;width:70px;height:6px;background:var(--bd);border-radius:3px;vertical-align:middle}.bar2{display:block;height:6px;background:var(--ac);border-radius:3px}
+tr.sh td{background:var(--bg);font-weight:600}
+#modal{position:fixed;inset:0;background:rgba(0,0,0,.5);overflow:auto;padding:16px;z-index:20}
+#modal .box{max-width:860px;margin:0 auto;background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:16px}
+@media print{.w{display:none!important}#modal{position:static;background:none;padding:0}#modal .box{border:0}.noprint{display:none!important}}
+</style></head><body>
+<div class="w">
 <div id="login" class="c hide"><h2>Sign in</h2><label>Portal password</label>
 <div class="bar" style="justify-content:flex-start"><input id="pw" type="password" style="max-width:260px"><button class="p" id="go">Open portal</button></div></div>
 
 <div id="app" class="hide">
-<div class="bar"><div><h1>Interview Portal</h1><div class="mu">Pick a position and candidate, score the questions, save the result to Google Sheets.</div></div>
-<button id="setup">Set up sheet</button></div>
+<div class="bar"><div><h1>Interview Portal</h1><div class="mu">Candidates, pending and completed interviews, all in one place.</div></div>
+<div><button id="reload">Refresh data</button> <button id="setup">Set up sheet</button></div></div>
 <div id="msg" class="mu"></div>
+<div class="tabs"><button data-view="over" class="on">Overview</button><button data-view="pend">Pending</button><button data-view="done">Completed</button><button data-view="intv">Interview</button></div>
 
+<section id="v-over"></section>
+
+<section id="v-pend" class="hide">
+<div class="c"><div class="flt">
+<div><label>Position</label><select id="pf-pos"></select></div>
+<div><label>Applied from</label><input id="pf-from" type="date"></div>
+<div><label>Applied to</label><input id="pf-to" type="date"></div>
+<div><label>Search name</label><input id="pf-q" placeholder="Name"></div>
+<div><label>Sort</label><select id="pf-sort"><option value="old">Oldest first</option><option value="new">Newest first</option></select></div>
+</div></div><div id="pend-list"></div></section>
+
+<section id="v-done" class="hide">
+<div class="c"><div class="flt">
+<div><label>Position</label><select id="df-pos"></select></div>
+<div><label>Decision</label><select id="df-dec"></select></div>
+<div><label>Interview from</label><input id="df-from" type="date"></div>
+<div><label>Interview to</label><input id="df-to" type="date"></div>
+<div><label>Search name</label><input id="df-q" placeholder="Name"></div>
+<div><label>Sort</label><select id="df-sort"><option value="new">Newest first</option><option value="old">Oldest first</option><option value="high">Highest score</option><option value="low">Lowest score</option></select></div>
+</div></div>
+<div class="bar"><div id="done-sum" class="mu"></div><button id="csv">Download CSV</button></div>
+<div class="c sx" id="done-list"></div></section>
+
+<section id="v-intv" class="hide">
 <div class="c"><h2>Candidate</h2>
 <div class="r"><div><label>Position</label><select id="pos"></select></div><div><label>Candidate</label><select id="cand"></select></div></div>
-<div class="r" style="margin-top:10px"><div><label>Interviewer</label><input id="ivr" placeholder="e.g. VRS"></div><div style="align-self:end"><button id="reload">Reload from sheet</button></div></div></div>
+<div style="margin-top:10px"><label>Interviewer</label><input id="ivr" placeholder="e.g. VRS" style="max-width:300px"></div></div>
+<div id="det"></div><div id="qs"></div><div id="fin"></div></section>
+</div></div>
 
-<div id="det"></div><div id="qs"></div><div id="fin"></div>
-<div class="c"><h2>Saved interviews</h2><div class="sx" id="hist"></div></div>
-</div>
+<div id="modal" class="hide"><div class="box" id="mbox"></div></div>
 
 <script>
 const $=i=>document.getElementById(i);
@@ -58,9 +95,22 @@ async function api(path,opt={}){
   if(!r.ok)throw new Error(j.error||"Request failed");return j}
 const z=n=>String(n).padStart(2,"0");
 const stamp=d=>`${z(d.getDate())}/${z(d.getMonth()+1)}/${d.getFullYear()} ${z(d.getHours())}:${z(d.getMinutes())}:${z(d.getSeconds())}`;
+function pdt(s){if(!s)return null;s=String(s).trim();
+  const m=s.match(/^(\d{1,2})[\/.-](\d{1,2})[\/.-](\d{4})(?:[ T,]+(\d{1,2}):(\d{2})(?::(\d{2}))?\s*(AM|PM)?)?/i);
+  if(m){let d=+m[1],mo=+m[2];if(mo>12&&d<=12)[d,mo]=[mo,d];let h=+(m[4]||0);
+    if(m[7]){const pm=/pm/i.test(m[7]);if(pm&&h<12)h+=12;if(!pm&&h===12)h=0}
+    const dt=new Date(+m[3],mo-1,d,h,+(m[5]||0),+(m[6]||0));return isNaN(dt)?null:dt}
+  const t=Date.parse(s);return isNaN(t)?null:new Date(t)}
+const dk=d=>d?`${d.getFullYear()}-${z(d.getMonth()+1)}-${z(d.getDate())}`:"";
+const fmtD=d=>d?`${z(d.getDate())}/${z(d.getMonth()+1)}/${d.getFullYear()}`:"No date";
+const fmtT=d=>d?`${z(d.getHours())}:${z(d.getMinutes())}`:"";
+const decCls=d=>/select/i.test(d)?"ok":/hold|trial|train/i.test(d)?"wa":/reject/i.test(d)?"bad":"mu";
+const tag=d=>`<span class="tag ${decCls(d)}">${esc(d||"-")}</span>`;
+const pctCls=p=>p>=70?"ok":p>=50?"wa":"bad";
 
-let H=[],rows=[],ci={n:1,p:2},hist=[],cur=null,Q=[],S={},tm=null;
+let H=[],rows=[],ci={n:1,p:2,t:0,ph:-1},hist=[],cands=[],ivs=[],doneList=[],cur=null,Q=[],S={},tm=null,QC={};
 const posOf=r=>(r[ci.p]||"").trim();
+const keyOf=(n,p)=>(n||"").trim().toLowerCase()+"|"+(p||"").trim().toLowerCase();
 
 async function load(){
   try{
@@ -68,39 +118,149 @@ async function load(){
     const c=await api("candidates");H=c.headers;rows=c.rows;
     const f=re=>H.findIndex(h=>re.test(h||""));
     ci.n=f(/name/i)>=0?f(/name/i):1;ci.p=f(/position|post|role|apply|job/i);if(ci.p<0)ci.p=2;
-    hist=(await api("interviews")).rows;
-    fillPos();renderHist();
-    msg(`${rows.length} candidate(s) loaded from “${c.tab}”.`,"ok");
+    ci.t=f(/timestamp|date/i);if(ci.t<0)ci.t=0;ci.ph=f(/phone|mobile|contact|whatsapp/i);
+    hist=(await api("interviews")).rows;QC={};
+    build();fillPos();fillFilters();renderAll();
+    msg(`${rows.length} candidate(s) and ${hist.length} saved interview(s) loaded.`,"ok");
   }catch(e){msg(e.message,"bad");try{const h=await api("health");msg(e.message+" | Tabs found: "+h.tabs.join(", "),"bad")}catch(_){}}
 }
+function build(){
+  cands=rows.map((r,i)=>({i,r,name:(r[ci.n]||"").trim(),pos:posOf(r),ts:pdt(r[ci.t])})).filter(c=>c.name);
+  ivs=hist.map((h,i)=>({h,i,name:(h[1]||"").trim(),pos:(h[2]||"").trim(),dt:pdt(h[4]||h[0]),pct:parseInt(h[9])||0,total:h[7],max:h[8],dec:h[11]||"",by:h[3]||"",mins:h[6]||"",notes:h[12]||"",raw:h[13]||""}));
+  const last={};ivs.forEach(v=>{const k=keyOf(v.name,v.pos);if(!last[k]||(v.dt||0)>(last[k].dt||0))last[k]=v});
+  cands.forEach(c=>c.iv=last[keyOf(c.name,c.pos)]||null);
+}
+const allPos=()=>[...new Set([...cands.map(c=>c.pos),...ivs.map(v=>v.pos)].filter(Boolean))].sort();
+function fillFilters(){
+  const opt=(id,list,first)=>{const el=$(id),v=el.value;el.innerHTML=`<option value="">${first}</option>`+list.map(x=>`<option>${esc(x)}</option>`).join("");el.value=list.includes(v)?v:""};
+  opt("pf-pos",allPos(),"All positions");opt("df-pos",allPos(),"All positions");
+  opt("df-dec",[...new Set(["Selected for next round","On hold / Called for trial","Rejected","Can be trained / entry level",...ivs.map(v=>v.dec).filter(Boolean)])],"All decisions");
+}
+function show(v){
+  document.querySelectorAll("[data-view]").forEach(b=>b.classList.toggle("on",b.dataset.view===v));
+  ["over","pend","done","intv"].forEach(x=>$("v-"+x).classList.toggle("hide",x!==v));
+}
+function renderAll(){renderOver();renderPend();renderDone()}
+
+/* ---------- Overview ---------- */
+function renderOver(){
+  const done=cands.filter(c=>c.iv).length,pend=cands.length-done,avg=ivs.length?Math.round(ivs.reduce((a,v)=>a+v.pct,0)/ivs.length):0;
+  const sel=ivs.filter(v=>/select/i.test(v.dec)).length;
+  const st=(n,l,c="")=>`<div class="stat"><div class="n ${c}">${n}</div><div class="mu">${l}</div></div>`;
+  const body=allPos().map(p=>{const cs=cands.filter(c=>c.pos===p),d=cs.filter(c=>c.iv).length,vs=ivs.filter(v=>v.pos===p),a=vs.length?Math.round(vs.reduce((s,v)=>s+v.pct,0)/vs.length):null;
+    return `<tr><td><b>${esc(p)}</b></td><td>${cs.length}</td><td>${d}</td><td>${cs.length-d}</td><td>${a===null?"-":`<span class="${pctCls(a)}">${a}%</span>`}</td><td><button data-go="pend" data-pos="${esc(p)}">Pending</button> <button data-go="done" data-pos="${esc(p)}">Completed</button></td></tr>`}).join("");
+  $("v-over").innerHTML=`<div class="stats">${st(cands.length,"Total candidates")}${st(done,"Interviews completed","ok")}${st(pend,"Pending interviews",pend?"wa":"")}${st(avg+"%","Average score",pctCls(avg))}${st(sel,"Selected for next round","ok")}</div>
+  <div class="c sx"><h2>By position</h2><table><tr><th>Position</th><th>Candidates</th><th>Completed</th><th>Pending</th><th>Avg score</th><th></th></tr>${body||'<tr><td colspan="6" class="mu">No data yet.</td></tr>'}</table></div>`;
+}
+
+/* ---------- Pending ---------- */
+function renderPend(){
+  const p=$("pf-pos").value,f=$("pf-from").value,t=$("pf-to").value,q=$("pf-q").value.toLowerCase(),asc=$("pf-sort").value==="old";
+  const l=cands.filter(c=>!c.iv&&(!p||c.pos===p)&&(!q||c.name.toLowerCase().includes(q))&&(!f||(c.ts&&dk(c.ts)>=f))&&(!t||(c.ts&&dk(c.ts)<=t)));
+  l.sort((a,b)=>((a.ts||0)-(b.ts||0))*(asc?1:-1));
+  const g=new Map();l.forEach(c=>{const k=dk(c.ts)||"none";if(!g.has(k))g.set(k,[]);g.get(k).push(c)});
+  let h=`<div class="mu">${l.length} pending interview(s)</div>`;
+  g.forEach(list=>{h+=`<div class="day"><span>${fmtD(list[0].ts)}</span><span class="mu">${list.length}</span></div>`+list.map(c=>`<div class="prow"><div><b>${esc(c.name)}</b> <span class="mu">${esc(c.pos)}${ci.ph>=0&&c.r[ci.ph]?" · "+esc(c.r[ci.ph]):""}${c.ts?" · applied "+fmtT(c.ts):""}</span></div><button class="p" data-start="${c.i}">Start interview</button></div>`).join("")});
+  $("pend-list").innerHTML=l.length?`<div class="c">${h}</div>`:'<div class="c mu">No pending interviews for these filters.</div>';
+}
+
+/* ---------- Completed ---------- */
+function filteredDone(){
+  const p=$("df-pos").value,d=$("df-dec").value,f=$("df-from").value,t=$("df-to").value,q=$("df-q").value.toLowerCase(),s=$("df-sort").value;
+  const l=ivs.filter(v=>(!p||v.pos===p)&&(!d||v.dec===d)&&(!q||v.name.toLowerCase().includes(q))&&(!f||(v.dt&&dk(v.dt)>=f))&&(!t||(v.dt&&dk(v.dt)<=t)));
+  l.sort((a,b)=>s==="old"?(a.dt||0)-(b.dt||0):s==="high"?b.pct-a.pct:s==="low"?a.pct-b.pct:(b.dt||0)-(a.dt||0));
+  return l}
+function renderDone(){
+  doneList=filteredDone();
+  const avg=doneList.length?Math.round(doneList.reduce((a,v)=>a+v.pct,0)/doneList.length):0;
+  $("done-sum").textContent=`Showing ${doneList.length} of ${ivs.length} interview(s)${doneList.length?`, average score ${avg}%`:""}. Click a row to see every question mark.`;
+  $("done-list").innerHTML=doneList.length?`<table><tr><th>Date</th><th>Candidate</th><th>Position</th><th>Interviewer</th><th>Score</th><th>%</th><th>Decision</th></tr>${doneList.map((v,i)=>`<tr data-row="${i}"><td>${fmtD(v.dt)}<div class="mu">${fmtT(v.dt)}</div></td><td><b>${esc(v.name)}</b></td><td>${esc(v.pos)}</td><td>${esc(v.by)}</td><td>${esc(v.total)}/${esc(v.max)}</td><td class="${pctCls(v.pct)}"><b>${v.pct}%</b></td><td>${tag(v.dec)}</td></tr>`).join("")}</table>`:'<span class="mu">No completed interviews for these filters.</span>';
+}
+async function questionsFor(pos){
+  if(QC[pos])return QC[pos];
+  try{const q=await api("questions?position="+encodeURIComponent(pos));QC[pos]=q.questions||[]}catch(e){QC[pos]=[]}
+  return QC[pos]}
+async function openDetail(i){
+  const v=doneList[i];if(!v)return;
+  $("modal").classList.remove("hide");$("mbox").innerHTML='<div class="mu">Loading…</div>';
+  let sc={};try{sc=JSON.parse(v.raw||"{}")}catch(e){}
+  const qs=await questionsFor(v.pos);
+  const cand=cands.find(c=>keyOf(c.name,c.pos)===keyOf(v.name,v.pos));
+  const val=(q,n)=>sc[q.id]!==undefined?sc[q.id]:sc["q"+(n+1)];
+  const secT={};qs.forEach((q,n)=>{const s=val(q,n);if(s!==undefined){(secT[q.section]=secT[q.section]||{t:0,m:0}).t+=s;secT[q.section].m+=q.max}});
+  let sec="",trs="";
+  qs.forEach((q,n)=>{if(q.section!==sec){sec=q.section;const st=secT[sec];trs+=`<tr class="sh"><td colspan="3">${esc(sec)}<span style="float:right" class="mu">${st?st.t+" / "+st.m:"not asked"}</span></td></tr>`}
+    const s=val(q,n);
+    trs+=`<tr><td class="qid">${esc(q.qid)}</td><td style="white-space:pre-line">${esc(q.text)}</td><td style="white-space:nowrap">${s===undefined?'<span class="mu">Not asked</span>':`<b>${s}</b> / ${q.max} <span class="barw"><span class="bar2" style="width:${Math.min(100,s/q.max*100)}%"></span></span>`}`+"</td></tr>"});
+  if(!qs.length)trs=Object.entries(sc).map(([k,s])=>`<tr><td class="qid">${esc(k)}</td><td class="mu">Question text unavailable</td><td><b>${esc(s)}</b></td></tr>`).join("");
+  const asked=Object.keys(sc).length;
+  $("mbox").innerHTML=`<div class="bar noprint"><button id="mclose">Close</button><button id="mprint">Print / Save as PDF</button></div>
+  <h2 style="margin-top:10px">${esc(v.name)} <span class="mu">${esc(v.pos)}</span></h2>
+  <div class="bar"><div><div class="big ${pctCls(v.pct)}">${esc(v.total)} / ${esc(v.max)}</div><div class="mu">${v.pct}% on ${asked} question(s) asked${v.mins?" · "+esc(v.mins)+" min":""}</div></div><div>${tag(v.dec)}<div class="mu" style="margin-top:4px">${fmtD(v.dt)} ${fmtT(v.dt)}${v.by?" · by "+esc(v.by):""}</div></div></div>
+  ${v.notes?`<div class="c"><h3>Interviewer notes</h3><div style="white-space:pre-line">${esc(v.notes)}</div></div>`:""}
+  ${cand?`<div class="c"><h3>Candidate form details</h3><div class="kv">${H.map((h,k)=>cand.r[k]?`<div><b>${esc(h)}</b>${esc(cand.r[k])}</div>`:"").join("")}</div></div>`:""}
+  <h3 style="margin-top:14px">Question-wise marks</h3><div class="sx"><table><tr><th>QID</th><th>Question</th><th>Marks</th></tr>${trs}</table></div>`;
+}
+
+/* ---------- CSV ---------- */
+$("csv").onclick=()=>{
+  const q=x=>`"${String(x??"").replace(/"/g,'""')}"`;
+  const lines=[["Date","Candidate","Position","Interviewer","Total","Max","Percent","Decision","Notes"].map(q).join(",")]
+    .concat(doneList.map(v=>[v.dt?fmtD(v.dt)+" "+fmtT(v.dt):"",v.name,v.pos,v.by,v.total,v.max,v.pct+"%",v.dec,v.notes].map(q).join(",")));
+  const a=document.createElement("a");a.href=URL.createObjectURL(new Blob(["\ufeff"+lines.join("\n")],{type:"text/csv"}));a.download="interviews.csv";a.click()};
+
+/* ---------- Interview flow ---------- */
 function fillPos(){const ps=[...new Set(rows.map(posOf).filter(Boolean))].sort();
   $("pos").innerHTML='<option value="">Select position</option>'+ps.map(p=>`<option>${esc(p)}</option>`).join("");fillCand()}
 function fillCand(){const p=$("pos").value;
-  const l=rows.map((r,i)=>({r,i})).filter(o=>p&&posOf(o.r)===p);
-  $("cand").innerHTML=`<option value="">${p?"Select candidate":"Select a position first"}</option>`+l.map(o=>{
-    const done=hist.some(h=>h[1]===o.r[ci.n]&&h[2]===p);return `<option value="${o.i}">${esc(o.r[ci.n])}${done?" (interviewed)":""}</option>`}).join("");pick()}
+  const l=cands.filter(c=>p&&c.pos===p);
+  $("cand").innerHTML=`<option value="">${p?"Select candidate":"Select a position first"}</option>`+l.map(c=>`<option value="${c.i}">${esc(c.name)}${c.iv?" (interviewed)":""}</option>`).join("");pick()}
 async function pick(){
   clearInterval(tm);$("fin").innerHTML="";S={};Q=[];cur=null;
   const i=$("cand").value;if(i===""){$("det").innerHTML="";$("qs").innerHTML="";return}
-  const r=rows[+i];cur={row:r,name:r[ci.n],pos:posOf(r),start:null,end:null,done:false};
+  const r=rows[+i];cur={row:r,name:(r[ci.n]||"").trim(),pos:posOf(r),start:null,end:null,done:false};
   $("det").innerHTML=`<div class="c"><h2>${esc(cur.name)}: form details</h2><div class="kv">${H.map((h,k)=>r[k]?`<div><b>${esc(h)}</b>${esc(r[k])}</div>`:"").join("")}</div></div>`;
   $("qs").innerHTML='<div class="c mu">Loading questions…</div>';
   try{const q=await api("questions?position="+encodeURIComponent(cur.pos));
     if(!q.questions.length){$("qs").innerHTML=`<div class="c bad">${esc(q.error||"No questions found for this position.")}</div>`;return}
-    Q=q.questions;cur.tab=q.tab;renderQs()}catch(e){$("qs").innerHTML=`<div class="c bad">${esc(e.message)}</div>`}
+    Q=q.questions;QC[cur.pos]=Q;cur.tab=q.tab;renderQs()}catch(e){$("qs").innerHTML=`<div class="c bad">${esc(e.message)}</div>`}
 }
 function renderQs(){
   let sec="",h="";
   Q.forEach(q=>{if(q.section!==sec){sec=q.section;h+=`<div class="sec">${esc(sec)}</div>`}
-    h+=`<div class="q"><div class="t">${q.qid?`<span class="qid">${esc(q.qid)}</span> `:""}${esc(q.text)}</div><div class="sc" data-id="${q.id}">${Array.from({length:q.max+1},(_,n)=>`<button data-v="${n}">${n}</button>`).join("")}<button class="sk on" data-v="">Not asked</button></div></div>`});
+    h+=`<div class="q"><div class="t">${q.qid?`<span class="qid">${esc(q.qid)}</span> `:""}${esc(q.text)}</div><div class="sc" data-id="${esc(q.id)}">${Array.from({length:q.max+1},(_,n)=>`<button data-v="${n}">${n}</button>`).join("")}<button class="sk on" data-v="">Not asked</button></div></div>`});
   $("qs").innerHTML=`<div class="c sticky"><div class="bar"><div><b>Interview: ${esc(cur.name)}</b><div class="mu">${esc(cur.pos)}, ${Q.length} questions from tab “${esc(cur.tab)}”</div></div>
   <div><span id="clk" class="mu">Not started</span> <button class="p" id="st">Start interview</button></div></div></div>
   <div class="c">${h}<div style="margin-top:14px"><label>Interviewer notes (++ strengths, -- weaknesses)</label><textarea id="nt" rows="4"></textarea></div>
   <div style="margin-top:12px"><button class="p" id="fn" disabled>Finish interview and show score</button></div></div>`}
 function stats(){let t=0,n=0,mx=0;Q.forEach(q=>{if(S[q.id]!==undefined){t+=S[q.id];mx+=q.max;n++}});return{t,n,mx,pct:mx?Math.round(t/mx*100):0}}
 const suggest=p=>p>=70?"Selected for next round":p>=50?"On hold / Called for trial":"Rejected";
+function finish(){
+  const s=stats(),mins=Math.round((cur.end-cur.start)/60000),sg=suggest(s.pct);
+  cur.res={s,mins};
+  $("fin").innerHTML=`<div class="c"><h2>Final score</h2><div class="bar"><div><div class="big ${pctCls(s.pct)}">${s.t} / ${s.mx}</div>
+  <div class="mu">${s.pct}% on ${s.n} of ${Q.length} questions asked. Duration ${mins} min (${stamp(cur.start)} to ${stamp(cur.end).slice(11)})</div></div>
+  <div><label>Decision</label><select id="dc">${["Selected for next round","On hold / Called for trial","Rejected","Can be trained / entry level"].map(o=>`<option ${o===sg?"selected":""}>${o}</option>`).join("")}</select></div></div>
+  <div style="margin-top:12px"><button class="p" id="sv">Save result</button> <span id="svm" class="mu"></span></div></div>`;
+  $("fin").scrollIntoView({behavior:"smooth"})}
+async function save(){
+  const s=cur.res.s,body={savedAt:stamp(new Date()),candidate:cur.name,position:cur.pos,interviewer:$("ivr").value,start:stamp(cur.start),end:stamp(cur.end),minutes:cur.res.mins,total:s.t,maxAsked:s.mx,percent:s.pct+"%",asked:s.n,decision:$("dc").value,notes:$("nt").value,scores:S};
+  $("sv").disabled=true;$("svm").textContent="Saving…";
+  try{await api("interviews",{method:"POST",body:JSON.stringify(body)});
+    hist.push([body.savedAt,body.candidate,body.position,body.interviewer,body.start,body.end,body.minutes,body.total,body.maxAsked,body.percent,body.asked,body.decision,body.notes,JSON.stringify(S)]);
+    build();fillFilters();renderAll();$("svm").textContent="Saved. See it under Completed.";$("svm").className="ok"}
+  catch(e){$("svm").textContent="Save failed: "+e.message;$("svm").className="bad";$("sv").disabled=false}}
+
+/* ---------- Events ---------- */
 document.addEventListener("click",e=>{
-  const b=e.target.closest("button");if(!b||!cur)return;
+  const t=e.target;
+  const nav=t.closest("[data-view]");if(nav){show(nav.dataset.view);return}
+  const go=t.closest("[data-go]");if(go){const pre=go.dataset.go==="pend"?"pf":"df";$(pre+"-pos").value=go.dataset.pos;show(go.dataset.go);go.dataset.go==="pend"?renderPend():renderDone();return}
+  const stt=t.closest("[data-start]");if(stt){const c=cands.find(x=>x.i===+stt.dataset.start);if(c){show("intv");$("pos").value=c.pos;fillCand();$("cand").value=c.i;pick()}return}
+  const rw=t.closest("[data-row]");if(rw){openDetail(+rw.dataset.row);return}
+  if(t.id==="modal"||t.id==="mclose"){$("modal").classList.add("hide");return}
+  if(t.id==="mprint"){window.print();return}
+  const b=t.closest("button");if(!b||!cur)return;
   if(b.parentElement.classList.contains("sc")){if(cur.done)return;const id=b.parentElement.dataset.id;
     if(b.dataset.v==="")delete S[id];else S[id]=+b.dataset.v;
     [...b.parentElement.children].forEach(x=>x.classList.toggle("on",x===b));return}
@@ -109,22 +269,8 @@ document.addEventListener("click",e=>{
   if(b.id==="fn"){cur.end=new Date();cur.done=true;clearInterval(tm);b.disabled=true;finish()}
   if(b.id==="sv")save();
 });
-function finish(){
-  const s=stats(),mins=Math.round((cur.end-cur.start)/60000),sg=suggest(s.pct),cl=s.pct>=70?"ok":s.pct>=50?"wa":"bad";
-  cur.res={s,mins};
-  $("fin").innerHTML=`<div class="c"><h2>Final score</h2><div class="bar"><div><div class="big ${cl}">${s.t} / ${s.mx}</div>
-  <div class="mu">${s.pct}% on ${s.n} of ${Q.length} questions asked. Duration ${mins} min (${stamp(cur.start)} to ${stamp(cur.end).slice(11)})</div></div>
-  <div><label>Decision</label><select id="dc">${["Selected for next round","On hold / Called for trial","Rejected","Can be trained / entry level"].map(o=>`<option ${o===sg?"selected":""}>${o}</option>`).join("")}</select></div></div>
-  <div style="margin-top:12px"><button class="p" id="sv">Save to Google Sheet</button> <span id="svm" class="mu"></span></div></div>`;
-  $("fin").scrollIntoView({behavior:"smooth"})}
-async function save(){
-  const s=cur.res.s,body={savedAt:stamp(new Date()),candidate:cur.name,position:cur.pos,interviewer:$("ivr").value,start:stamp(cur.start),end:stamp(cur.end),minutes:cur.res.mins,total:s.t,maxAsked:s.mx,percent:s.pct+"%",asked:s.n,decision:$("dc").value,notes:$("nt").value,scores:S};
-  $("sv").disabled=true;$("svm").textContent="Saving…";
-  try{await api("interviews",{method:"POST",body:JSON.stringify(body)});$("svm").textContent="Saved to the Interviews tab.";$("svm").className="ok";
-    hist.push([body.savedAt,body.candidate,body.position,body.interviewer,body.start,body.end,body.minutes,body.total,body.maxAsked,body.percent,body.asked,body.decision]);renderHist()}
-  catch(e){$("svm").textContent="Save failed: "+e.message;$("svm").className="bad";$("sv").disabled=false}}
-function renderHist(){
-  $("hist").innerHTML=hist.length?`<table><tr><th>Saved</th><th>Candidate</th><th>Position</th><th>Score</th><th>%</th><th>Decision</th></tr>${hist.slice().reverse().slice(0,40).map(h=>`<tr><td>${esc(h[0])}</td><td>${esc(h[1])}</td><td>${esc(h[2])}</td><td>${esc(h[7])}/${esc(h[8])}</td><td>${esc(h[9])}</td><td>${esc(h[11])}</td></tr>`).join("")}</table>`:'<span class="mu">No interviews saved yet.</span>'}
+document.addEventListener("input",e=>{const id=e.target.id||"";if(id.startsWith("pf-"))renderPend();if(id.startsWith("df-"))renderDone()});
+document.addEventListener("keydown",e=>{if(e.key==="Escape")$("modal").classList.add("hide")});
 $("setup").onclick=async()=>{try{msg("Setting up…");const r=await api("setup",{method:"POST"});msg(r.created.length?"Created tabs: "+r.created.join(", "):"Sheet already set up.","ok");load()}catch(e){msg(e.message,"bad")}};
 $("pos").onchange=fillCand;$("cand").onchange=pick;$("reload").onclick=load;
 $("ivr").value=localStorage.getItem("ivr")||"";$("ivr").onchange=()=>localStorage.setItem("ivr",$("ivr").value);
@@ -132,4 +278,4 @@ $("go").onclick=()=>{sessionStorage.setItem("pw",$("pw").value);start()};
 $("pw").onkeydown=e=>{if(e.key==="Enter")$("go").click()};
 function start(){$("login").classList.add("hide");$("app").classList.remove("hide");load()}
 (async()=>{try{await api("questions");start()}catch(e){if(e.message==="Wrong password"){$("login").classList.remove("hide")}else start()}})();
-</script></div></body></html>
+</script></body></html>

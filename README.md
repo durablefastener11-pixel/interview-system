@@ -6,10 +6,16 @@ Position-wise interview portal. Google Form responses are the candidates, each p
 | Tab | Purpose |
 |---|---|
 | `Form Responses 1` | Google Form responses (needs a Name column and a Position column) |
-| `Q_Accountant`, `Q_Sales`, `Q_Tele Sales`, ... | One tab per position. Columns: **Section, Question, Max score** |
+| `Q_Accountant`, `Q_Sales`, `Q_Tele Sales`, ... | One tab per position, laid out like the interview sheet (see below) |
 | `Interviews` | Results are saved here automatically |
 
 A candidate whose Position is "Accountant" gets the questions from tab `Q_Accountant`. Add a new position by adding a new `Q_<Position>` tab and the same name to the form dropdown.
+
+## Question tab layout
+Column A = QID, column B = question, optional column C = max score (default 5).
+- A row with `QID` in column A is a **section header**; column B is its title, e.g. `Question - (A) Initial Screening`.
+- A row starting with `▶` in column A is a **stage header**, e.g. `▶ STAGE 3A - INDIAMART TRAPS`.
+- Every other row with text in column B is a question. Rows like "Total Dimension Score" and "Score %" are ignored.
 
 ## 1. Google Cloud (service account)
 1. Go to console.cloud.google.com and create a project.
